@@ -9,7 +9,7 @@ import (
 
 var StopIteration = io.EOF
 
-// DIVISIONS_LENGTH is the number of divisions in the data directory.
+// DivisionsLength the number of divisions in the data directory.
 const DivisionsLength = 10604
 
 // Division is a division of Vietnam.
