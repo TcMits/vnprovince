@@ -7,8 +7,8 @@ const WardsLength = 10599
 
 // Ward is a ward in Vietnam.
 type Ward struct {
-	Name string
-	Code int64
+	Name string `json:"name"`
+	Code int64  `json:"code"`
 }
 
 // GetWards returns all wards.

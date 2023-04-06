@@ -7,9 +7,9 @@ const ProvincesLength = 63
 
 // Province represents a province.
 type Province struct {
-	Name      string
-	Code      int64
-	Districts []District
+	Name      string     `json:"name"`
+	Code      int64      `json:"code"`
+	Districts []District `json:"districts"`
 }
 
 // GetProvinces returns all provinces and districts.

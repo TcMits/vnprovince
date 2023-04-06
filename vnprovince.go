@@ -7,19 +7,17 @@ import (
 	"strconv"
 )
 
-var StopIteration = io.EOF
-
 // DivisionsLength the number of divisions in the data directory.
 const DivisionsLength = 10604
 
 // Division is a division of Vietnam.
 type Division struct {
-	ProvinceName string
-	ProvinceCode int64
-	DistrictName string
-	DistrictCode int64
-	WardName     string
-	WardCode     int64
+	ProvinceName string `json:"provinceName"`
+	ProvinceCode int64  `json:"provinceCode"`
+	DistrictName string `json:"districtName"`
+	DistrictCode int64  `json:"districtCode"`
+	WardName     string `json:"wardName"`
+	WardCode     int64  `json:"wardCode"`
 }
 
 // GetDivisions returns all divisions in the data directory.
@@ -53,7 +51,7 @@ func EachDivision(fn func(d Division) error) error {
 	d := new(Division)
 	for {
 		row, err := csvReader.Read()
-		if err == StopIteration {
+		if err == io.EOF {
 			break
 		}
 

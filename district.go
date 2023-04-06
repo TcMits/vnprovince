@@ -8,9 +8,9 @@ const DistrictsLength = 705
 
 // District is a district in Vietnam.
 type District struct {
-	Name  string
-	Code  int64
-	Wards []Ward
+	Name  string `json:"name"`
+	Code  int64  `json:"code"`
+	Wards []Ward `json:"wards"`
 }
 
 // GetDistricts returns all districts and wards.
