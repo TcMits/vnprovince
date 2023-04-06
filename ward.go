@@ -12,15 +12,18 @@ type Ward struct {
 }
 
 // GetWards returns all wards.
-func GetWards(out *[]*Ward) error {
-	if out == nil {
-		return errors.New("out is nil")
-	}
+func GetWards() ([]*Ward, error) {
+	out := make([]*Ward, 0, WardsLength)
 
-	return EachWard(func(w Ward) error {
-		*out = append(*out, &w)
+	err := EachWard(func(w Ward) error {
+		out = append(out, &w)
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return out, err
 }
 
 // EachWard iterates over all wards.

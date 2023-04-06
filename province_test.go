@@ -6,41 +6,8 @@ import (
 )
 
 func TestGetProvinces(t *testing.T) {
-	type args struct {
-		out *[]*Province
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "t1",
-			args: args{
-				out: nil,
-			},
-			wantErr: true,
-		},
-		{
-			name: "t2",
-			args: args{
-				out: new([]*Province),
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := GetProvinces(tt.args.out); (err != nil) != tt.wantErr {
-				t.Errorf("GetProvinces() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestGetProvincesCount(t *testing.T) {
-	provinces := make([]*Province, 0, ProvincesLength)
-	if err := GetProvinces(&provinces); err != nil {
+	provinces, err := GetProvinces()
+	if err != nil {
 		t.Fatal(err)
 	}
 

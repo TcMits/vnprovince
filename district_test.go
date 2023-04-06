@@ -6,41 +6,8 @@ import (
 )
 
 func TestGetDistricts(t *testing.T) {
-	type args struct {
-		out *[]*District
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "t1",
-			args: args{
-				out: nil,
-			},
-			wantErr: true,
-		},
-		{
-			name: "t2",
-			args: args{
-				out: new([]*District),
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := GetDistricts(tt.args.out); (err != nil) != tt.wantErr {
-				t.Errorf("GetDistricts() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestGetDistrictsLength(t *testing.T) {
-	districts := make([]*District, 0, DistrictsLength)
-	if err := GetDistricts(&districts); err != nil {
+	districts, err := GetDistricts()
+	if err != nil {
 		t.Fatal(err)
 	}
 

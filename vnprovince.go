@@ -23,15 +23,18 @@ type Division struct {
 }
 
 // GetDivisions returns all divisions in the data directory.
-func GetDivisions(out *[]*Division) error {
-	if out == nil {
-		return errors.New("out is nil")
-	}
+func GetDivisions() ([]*Division, error) {
+	out := make([]*Division, 0, DivisionsLength)
 
-	return EachDivision(func(d Division) error {
-		*out = append(*out, &d)
+	err := EachDivision(func(d Division) error {
+		out = append(out, &d)
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return out, err
 }
 
 // EachDivision calls fn for each division in the data directory.

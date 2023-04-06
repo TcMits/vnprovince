@@ -13,15 +13,18 @@ type Province struct {
 }
 
 // GetProvinces returns all provinces and districts.
-func GetProvinces(out *[]*Province) error {
-	if out == nil {
-		return errors.New("out is nil")
-	}
+func GetProvinces() ([]*Province, error) {
+	out := make([]*Province, 0, ProvincesLength)
 
-	return EachProvince(func(p Province) error {
-		*out = append(*out, &p)
+	err := EachProvince(func(p Province) error {
+		out = append(out, &p)
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return out, err
 }
 
 // EachProvince iterates over all provinces and districts.

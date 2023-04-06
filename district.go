@@ -14,15 +14,18 @@ type District struct {
 }
 
 // GetDistricts returns all districts and wards.
-func GetDistricts(out *[]*District) error {
-	if out == nil {
-		return errors.New("out is nil")
-	}
+func GetDistricts() ([]*District, error) {
+	out := make([]*District, 0, DistrictsLength)
 
-	return EachDistrict(func(d District) error {
-		*out = append(*out, &d)
+	err := EachDistrict(func(d District) error {
+		out = append(out, &d)
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return out, err
 }
 
 // EachDistrict iterates over all districts and wards.
