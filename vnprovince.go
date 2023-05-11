@@ -43,7 +43,7 @@ func EachDivision(fn func(d Division) error) error {
 
 	f, err := DataDirFS.Open(DivisionPath)
 	if err != nil {
-		return nil
+		return err
 	}
 	defer f.Close()
 
