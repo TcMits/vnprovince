@@ -78,5 +78,6 @@ func districtFromDivision(d *Division, dist *District) {
 
 	// ward is the smallest unit of division
 	dist.Wards = append(dist.Wards, Ward{})
-	wardFromDivision(d, &dist.Wards[len(dist.Wards)-1])
+	dist.Wards[len(dist.Wards)-1].Code = d.WardCode
+	dist.Wards[len(dist.Wards)-1].Name = d.WardName
 }

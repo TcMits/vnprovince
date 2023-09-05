@@ -49,9 +49,3 @@ func EachWard(fn func(w Ward) error) error {
 		return nil
 	})
 }
-
-// wardFromDivision sets the ward from the division.
-func wardFromDivision(d *Division, w *Ward) {
-	w.Code = d.WardCode
-	w.Name = d.WardName
-}
