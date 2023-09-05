@@ -7,8 +7,8 @@ const ProvincesLength = 63
 
 // Province represents a province.
 type Province struct {
-	Name      string     `json:"name"`
 	Code      int64      `json:"code"`
+	Name      string     `json:"name"`
 	Districts []District `json:"districts"`
 }
 
@@ -16,15 +16,14 @@ type Province struct {
 func GetProvinces() ([]*Province, error) {
 	out := make([]*Province, 0, ProvincesLength)
 
-	err := EachProvince(func(p Province) error {
+	if err := EachProvince(func(p Province) error {
 		out = append(out, &p)
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
-	return out, err
+	return out, nil
 }
 
 // EachProvince iterates over all provinces and districts.
@@ -34,30 +33,29 @@ func EachProvince(fn func(p Province) error) error {
 	}
 
 	var previousCode int64 = 1
-	currentProvince := &Province{
-		Districts: make([]District, 0, 2),
+	currentProvince := Province{
+		Districts: make([]District, 0, districtsCapacity),
 	}
 
-	err := EachDivision(func(d Division) error {
+	if err := EachDivision(func(d Division) error {
 		if previousCode != d.ProvinceCode {
-			if err := fn(*currentProvince); err != nil {
+			if err := fn(currentProvince); err != nil {
 				return err
 			}
 
 			// update previousCode
 			previousCode = d.ProvinceCode
-			currentProvince.Districts = make([]District, 0, 2)
+			currentProvince.Districts = make([]District, 0, districtsCapacity)
 		}
 
-		provinceFromDivision(&d, currentProvince)
+		provinceFromDivision(&d, &currentProvince)
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
 	// handle the last province
-	if err := fn(*currentProvince); err != nil {
+	if err := fn(currentProvince); err != nil {
 		return err
 	}
 

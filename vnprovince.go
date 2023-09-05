@@ -12,27 +12,26 @@ const DivisionsLength = 10604
 
 // Division is a division of Vietnam.
 type Division struct {
-	ProvinceName string `json:"provinceName"`
 	ProvinceCode int64  `json:"provinceCode"`
-	DistrictName string `json:"districtName"`
 	DistrictCode int64  `json:"districtCode"`
-	WardName     string `json:"wardName"`
 	WardCode     int64  `json:"wardCode"`
+	ProvinceName string `json:"provinceName"`
+	DistrictName string `json:"districtName"`
+	WardName     string `json:"wardName"`
 }
 
 // GetDivisions returns all divisions in the data directory.
 func GetDivisions() ([]*Division, error) {
 	out := make([]*Division, 0, DivisionsLength)
 
-	err := EachDivision(func(d Division) error {
+	if err := EachDivision(func(d Division) error {
 		out = append(out, &d)
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
-	return out, err
+	return out, nil
 }
 
 // EachDivision calls fn for each division in the data directory.
@@ -48,7 +47,6 @@ func EachDivision(fn func(d Division) error) error {
 	defer f.Close()
 
 	csvReader := csv.NewReader(f)
-	d := new(Division)
 	for {
 		row, err := csvReader.Read()
 		if err == io.EOF {
@@ -59,30 +57,17 @@ func EachDivision(fn func(d Division) error) error {
 			return err
 		}
 
-		fromRow(row, d)
-
-		if err := fn(*d); err != nil {
+		if err := fn(Division{
+			ProvinceName: row[0],
+			ProvinceCode: must(strconv.ParseInt(row[1], 10, 64)),
+			DistrictName: row[2],
+			DistrictCode: must(strconv.ParseInt(row[3], 10, 64)),
+			WardName:     row[4],
+			WardCode:     ignore(strconv.ParseInt(row[5], 10, 64)),
+		}); err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-// fromRow populates d from a row of the CSV file.
-// it panics if the row is invalid.
-func fromRow(row []string, d *Division) {
-	d.ProvinceName = row[0]
-	d.ProvinceCode = must(strconv.ParseInt(row[1], 10, 64))
-
-	d.DistrictName = row[2]
-	d.DistrictCode = must(strconv.ParseInt(row[3], 10, 64))
-
-	if row[4] != "" {
-		d.WardName = row[4]
-		d.WardCode = must(strconv.ParseInt(row[5], 10, 64))
-	} else {
-		d.WardName = ""
-		d.WardCode = 0
-	}
 }

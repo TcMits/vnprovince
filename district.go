@@ -4,12 +4,16 @@ import (
 	"errors"
 )
 
-const DistrictsLength = 705
+const (
+	// districtsCapacity is the number of districts.
+	DistrictsLength   = 705
+	districtsCapacity = int(DistrictsLength / ProvincesLength)
+)
 
 // District is a district in Vietnam.
 type District struct {
-	Name  string `json:"name"`
 	Code  int64  `json:"code"`
+	Name  string `json:"name"`
 	Wards []Ward `json:"wards"`
 }
 
@@ -17,15 +21,14 @@ type District struct {
 func GetDistricts() ([]*District, error) {
 	out := make([]*District, 0, DistrictsLength)
 
-	err := EachDistrict(func(d District) error {
+	if err := EachDistrict(func(d District) error {
 		out = append(out, &d)
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
-	return out, err
+	return out, nil
 }
 
 // EachDistrict iterates over all districts and wards.
@@ -36,10 +39,10 @@ func EachDistrict(fn func(d District) error) error {
 
 	var previousCode int64 = 1
 	currentDistrict := &District{
-		Wards: make([]Ward, 0, 1),
+		Wards: make([]Ward, 0, wardsCapacity),
 	}
 
-	err := EachDivision(func(d Division) error {
+	if err := EachDivision(func(d Division) error {
 		if previousCode != d.DistrictCode {
 			if err := fn(*currentDistrict); err != nil {
 				return err
@@ -47,13 +50,12 @@ func EachDistrict(fn func(d District) error) error {
 
 			// update previousCode
 			previousCode = d.DistrictCode
-			currentDistrict.Wards = make([]Ward, 0, 1)
+			currentDistrict.Wards = make([]Ward, 0, wardsCapacity)
 		}
 
 		districtFromDivision(&d, currentDistrict)
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 

@@ -6,3 +6,7 @@ func must[T any](v T, err error) T {
 	}
 	return v
 }
+
+func ignore[T any](v T, _ error) T {
+	return v
+}

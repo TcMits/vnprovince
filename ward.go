@@ -2,28 +2,30 @@ package vnprovince
 
 import "errors"
 
-// WardsLength is the number of wards.
-const WardsLength = 10599
+const (
+	// WardsLength is the number of wards.
+	WardsLength   = 10599
+	wardsCapacity = int(WardsLength / DistrictsLength)
+)
 
 // Ward is a ward in Vietnam.
 type Ward struct {
-	Name string `json:"name"`
 	Code int64  `json:"code"`
+	Name string `json:"name"`
 }
 
 // GetWards returns all wards.
 func GetWards() ([]*Ward, error) {
 	out := make([]*Ward, 0, WardsLength)
 
-	err := EachWard(func(w Ward) error {
+	if err := EachWard(func(w Ward) error {
 		out = append(out, &w)
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
-	return out, err
+	return out, nil
 }
 
 // EachWard iterates over all wards.
@@ -32,15 +34,15 @@ func EachWard(fn func(w Ward) error) error {
 		return errors.New("fn is nil")
 	}
 
-	currentWard := new(Ward)
-
 	return EachDivision(func(d Division) error {
 		if d.WardCode == 0 {
 			return nil
 		}
 
-		wardFromDivision(&d, currentWard)
-		if err := fn(*currentWard); err != nil {
+		if err := fn(Ward{
+			Code: d.WardCode,
+			Name: d.WardName,
+		}); err != nil {
 			return err
 		}
 
