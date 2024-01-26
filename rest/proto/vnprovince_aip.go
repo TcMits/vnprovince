@@ -3,7 +3,7 @@
 // versions:
 // 	protoc-gen-go-aip development
 // 	protoc (unknown)
-// source: api/proto/vnprovince.proto
+// source: rest/proto/vnprovince.proto
 
 package proto
 

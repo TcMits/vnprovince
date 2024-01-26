@@ -1,4 +1,4 @@
-package api
+package rest
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/TcMits/aipstr"
 	"github.com/TcMits/vnprovince"
-	"github.com/TcMits/vnprovince/api/proto"
+	"github.com/TcMits/vnprovince/rest/proto"
 	"github.com/alecthomas/participle/v2"
 	"go.einride.tech/aip/pagination"
 	"google.golang.org/grpc/codes"
@@ -16,15 +16,15 @@ import (
 
 var stopIteration = errors.New("stop iteration")
 
-type vnProvinceService struct {
+type VNProvinceService struct {
 	proto.UnimplementedVNProvinceServiceServer
 
 	divisionDeclaration *aipstr.Declaration[selector]
 	parser              *participle.Parser[aipstr.Filter]
 }
 
-func newVNProvinceService() *vnProvinceService {
-	return &vnProvinceService{
+func NewVNProvinceService() *VNProvinceService {
+	return &VNProvinceService{
 		divisionDeclaration: getFilterDeclaration(),
 		parser:              aipstr.NewFilterParser(),
 	}
@@ -41,7 +41,7 @@ func apiDivisionFromDivision(dst *proto.Division, src *vnprovince.Division) {
 	dst.WardName = src.WardName
 }
 
-func (s *vnProvinceService) ListDivisions(ctx context.Context, req *proto.ListDivisionsRequest) (*proto.ListDivisionsResponse, error) {
+func (s *VNProvinceService) ListDivisions(ctx context.Context, req *proto.ListDivisionsRequest) (*proto.ListDivisionsResponse, error) {
 	if err := req.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -91,7 +91,7 @@ func (s *vnProvinceService) ListDivisions(ctx context.Context, req *proto.ListDi
 	return &resp, nil
 }
 
-func (s *vnProvinceService) GetDivision(ctx context.Context, req *proto.GetDivisionRequest) (*proto.Division, error) {
+func (s *VNProvinceService) GetDivision(ctx context.Context, req *proto.GetDivisionRequest) (*proto.Division, error) {
 	if err := req.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}

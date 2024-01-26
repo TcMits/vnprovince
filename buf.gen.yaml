@@ -18,7 +18,7 @@ plugins:
       - paths=source_relative
       - generate_unbound_methods=true
   - plugin: openapiv2
-    out: api/proto
+    out: rest/proto
     strategy: directory
     opt:
       - allow_merge=true

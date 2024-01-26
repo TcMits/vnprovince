@@ -1,14 +1,14 @@
-package api
+package rest
 
 import (
 	"context"
 	"testing"
 
-	"github.com/TcMits/vnprovince/api/proto"
+	"github.com/TcMits/vnprovince/rest/proto"
 )
 
 func Test_vnProvinceService_ListDivisions(t *testing.T) {
-	s := newVNProvinceService()
+	s := NewVNProvinceService()
 	ctx := context.Background()
 
 	req := &proto.ListDivisionsRequest{PageSize: -10}
@@ -64,7 +64,7 @@ func Test_vnProvinceService_ListDivisions(t *testing.T) {
 }
 
 func Test_vnProvinceService_GetDivision(t *testing.T) {
-	s := newVNProvinceService()
+	s := NewVNProvinceService()
 	ctx := context.Background()
 
 	req := &proto.GetDivisionRequest{Name: "divisions/1"}

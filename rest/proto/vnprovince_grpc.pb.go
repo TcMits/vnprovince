@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: api/proto/vnprovince.proto
+// source: rest/proto/vnprovince.proto
 
 package proto
 
@@ -138,5 +138,5 @@ var VNProvinceService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/proto/vnprovince.proto",
+	Metadata: "rest/proto/vnprovince.proto",
 }
