@@ -1,7 +1,7 @@
 entgo.io/ent v0.12.5 h1:KREM5E4CSoej4zeGa88Ou/gfturAnpUv0mzAjch1sj4=
 entgo.io/ent v0.12.5/go.mod h1:Y3JVAjtlIk8xVZYSn3t3mf8xlZIn5SAOXZQxD6kKI+Q=
-github.com/TcMits/aipstr v0.0.1 h1:OPFyK3lvgcnJGaOy2L4A4zkTYPzCm384EW68IsbrE3U=
-github.com/TcMits/aipstr v0.0.1/go.mod h1:9TLCAf+fOKzCZQkd/j+TJEcM8UMKR4fUg1xlYQLz4Yk=
+github.com/TcMits/aipstr v0.0.2-0.20240126090845-3a3321a16d66 h1:TG18iCBw5VqLWFuGIe1PDSkkdwPRYCubhbbVLQglffk=
+github.com/TcMits/aipstr v0.0.2-0.20240126090845-3a3321a16d66/go.mod h1:7nPbrGrGVfjn9h+SeGi+rKRwa6zZYBLNI0towoWqk0c=
 github.com/alecthomas/assert/v2 v2.3.0 h1:mAsH2wmvjsuvyBvAmCtm7zFsBlb8mIHx5ySLVdDZXL0=
 github.com/alecthomas/assert/v2 v2.3.0/go.mod h1:pXcQ2Asjp247dahGEmsZ6ru0UVwnkhktn7S0bBDLxvQ=
 github.com/alecthomas/participle/v2 v2.1.1 h1:hrjKESvSqGHzRb4yW1ciisFJ4p3MGYih6icjJvbsmV8=

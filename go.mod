@@ -1,9 +1,9 @@
 module github.com/TcMits/vnprovince
 
-go 1.21.5
+go 1.21.1
 
 require (
-	github.com/TcMits/aipstr v0.0.1
+	github.com/TcMits/aipstr v0.0.2-0.20240126090845-3a3321a16d66
 	github.com/alecthomas/participle/v2 v2.1.1
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0
