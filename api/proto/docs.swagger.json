@@ -1,0 +1,189 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api/proto/vnprovince.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "VNProvinceService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/divisions": {
+      "get": {
+        "operationId": "VNProvinceService_ListDivisions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protoListDivisionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter",
+            "description": "syntax: https://google.aip.dev/160\nsupport identities:\n- ward_code\n- province_code\n- district_code\n- province_name\n- district_name\n- ward_name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "VNProvinceService"
+        ]
+      }
+    },
+    "/api/{division_name}": {
+      "get": {
+        "operationId": "VNProvinceService_GetDivision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protoDivision"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "division_name",
+            "description": "Format: divisions/{division_id}",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "pattern": "divisions/[^/]+"
+          }
+        ],
+        "tags": [
+          "VNProvinceService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protoDivision": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Format: divisions/{division_id}"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "province_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "district_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ward_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "province_name": {
+          "type": "string"
+        },
+        "district_name": {
+          "type": "string"
+        },
+        "ward_name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "province_code",
+        "district_code",
+        "province_name",
+        "district_name"
+      ]
+    },
+    "protoListDivisionsResponse": {
+      "type": "object",
+      "properties": {
+        "divisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protoDivision"
+          }
+        },
+        "next_page_token": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

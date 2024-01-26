@@ -20,6 +20,14 @@ type Division struct {
 	WardName     string `json:"wardName"`
 }
 
+func (d *Division) ID() int64 {
+	if d == nil {
+		return 0
+	}
+
+	return d.WardCode + d.DistrictCode + d.ProvinceCode
+}
+
 // GetDivisions returns all divisions in the data directory.
 func GetDivisions() ([]*Division, error) {
 	out := make([]*Division, 0, DivisionsLength)
