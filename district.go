@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	// districtsCapacity is the number of districts.
-	DistrictsLength   = 705
+	// DistrictsLength is the number of districts in Vietnam.
+	DistrictsLength = 704
 	districtsCapacity = int(DistrictsLength / ProvincesLength)
 )
 

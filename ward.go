@@ -4,7 +4,7 @@ import "errors"
 
 const (
 	// WardsLength is the number of wards.
-	WardsLength   = 10599
+	WardsLength   = 10542
 	wardsCapacity = int(WardsLength / DistrictsLength)
 )
 

@@ -8,7 +8,7 @@ import (
 )
 
 // DivisionsLength the number of divisions in the data directory.
-const DivisionsLength = 10604
+const DivisionsLength = 10547
 
 // Division is a division of Vietnam.
 type Division struct {
