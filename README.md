@@ -2,6 +2,12 @@
 
 vnprovince provides a list of Vietnam administrative divisions
 
+### Install
+
+```sh
+go get github.com/TcMits/vnprovince@main
+```
+
 
 ### Examples
 
