@@ -32,7 +32,7 @@ func EachDivision(fn func(d Division) bool) {
 		case '\n':
 			row := dataDirFS[startIdx:i]
 			commaIdx := 0
-			for j, c := range row {
+			for j, c := range stob(row) {
 				if c == ',' {
 					commaSep[commaIdx] = j
 					commaIdx++
