@@ -1,14 +1,13 @@
 package vnprovince
 
 import (
-	"encoding/csv"
-	"errors"
-	"io"
 	"strconv"
+	"unsafe"
 )
 
-// DivisionsLength the number of divisions in the data directory.
-const DivisionsLength = 10547
+func stob(s string) []byte {
+	return unsafe.Slice(unsafe.StringData(s), len(s))
+}
 
 // Division is a division of Vietnam.
 type Division struct {
@@ -20,54 +19,43 @@ type Division struct {
 	WardName     string `json:"wardName"`
 }
 
-// GetDivisions returns all divisions in the data directory.
-func GetDivisions() ([]*Division, error) {
-	out := make([]*Division, 0, DivisionsLength)
-
-	if err := EachDivision(func(d Division) error {
-		out = append(out, &d)
-		return nil
-	}); err != nil {
-		return nil, err
-	}
-
-	return out, nil
-}
-
 // EachDivision calls fn for each division in the data directory.
-func EachDivision(fn func(d Division) error) error {
+func EachDivision(fn func(d Division) bool) {
 	if fn == nil {
-		return errors.New("fn is nil")
+		return
 	}
 
-	f, err := DataDirFS.Open(DivisionPath)
-	if err != nil {
-		return err
+	commaSep := [7]int{}
+	startIdx := 0
+	for i := range stob(dataDirFS) {
+		switch dataDirFS[i] {
+		case '\n':
+			row := dataDirFS[startIdx:i]
+			commaIdx := 0
+			for j, c := range row {
+				if c == ',' {
+					commaSep[commaIdx] = j
+					commaIdx++
+				}
+			}
+
+			var wardCode int64 = 0
+			if wcs := row[commaSep[4]+1 : commaSep[5]]; wcs != "" {
+				wardCode = must(strconv.ParseInt(wcs, 10, 64))
+			}
+
+			if !fn(Division{
+				ProvinceName: row[:commaSep[0]],
+				ProvinceCode: must(strconv.ParseInt(row[commaSep[0]+1:commaSep[1]], 10, 64)),
+				DistrictName: row[commaSep[1]+1 : commaSep[2]],
+				DistrictCode: must(strconv.ParseInt(row[commaSep[2]+1:commaSep[3]], 10, 64)),
+				WardName:     row[commaSep[3]+1 : commaSep[4]],
+				WardCode:     wardCode,
+			}) {
+				return
+			}
+
+			startIdx = i + 1 // skip newline character
+		}
 	}
-	defer f.Close()
-
-	csvReader := csv.NewReader(f)
-	for {
-		row, err := csvReader.Read()
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if err := fn(Division{
-			ProvinceName: row[0],
-			ProvinceCode: must(strconv.ParseInt(row[1], 10, 64)),
-			DistrictName: row[2],
-			DistrictCode: must(strconv.ParseInt(row[3], 10, 64)),
-			WardName:     row[4],
-			WardCode:     ignore(strconv.ParseInt(row[5], 10, 64)),
-		}); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

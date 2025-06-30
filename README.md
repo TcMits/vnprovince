@@ -1,18 +1,9 @@
-# vnprovince
+### vnprovince
 
-vnprovince is a Golang library that provides a list of Vietnam administrative divisions, including tỉnh thành (provinces), quận huyện (districts), and phường xã (communes/wards). The library includes both the name and code for each administrative division, as defined by the General Statistics Office of Vietnam (Tổng cục Thống kê).
+vnprovince provides a list of Vietnam administrative divisions
 
-## Installation
 
-You can install the library using `go get`:
-
-```sh
-go get github.com/TcMits/vnprovince
-```
-
-## Usage
-
-To use the vnprovince library in your Golang project, simply import it and use the provided functions to access the administrative divisions. Here's a simple example:
+### Examples
 
 go
 
@@ -25,21 +16,12 @@ import (
 )
 
 func main() {
-  provinces, err := vnprovince.GetProvinces()
-  if err != nil {
-    fmt.Println(err)
-  }
-
-  for _, province := range provinces {
-    fmt.Println(province.Name)
-  }
+	vnprovince.EachDivision(func(d Division) bool {
+		return true
+	})
 }
 ```
 
-## Contributing
-
-Contributions to the vnprovince library are welcome! If you find a bug or have an idea for a new feature, please open an issue or submit a pull request.
-
-## Data
+### Data
 
 - https://danhmuchanhchinh.gso.gov.vn/
