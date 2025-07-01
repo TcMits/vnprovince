@@ -5,8 +5,12 @@ vnprovince provides a list of Vietnam administrative divisions
 ### Install
 
 ```sh
-go get github.com/TcMits/vnprovince@main
+go get github.com/TcMits/vnprovince/v2@main
 ```
+
+### Updates
+
+- use `github.com/TcMits/vnprovince/v2@main` for 01/07/2025 divisions
 
 
 ### Examples
@@ -31,3 +35,4 @@ func main() {
 ### Data
 
 - https://danhmuchanhchinh.gso.gov.vn/
+- https://easyinvoice.vn/easyinvoice-cap-nhat-danh-sach-xa-phuong-moi-2025-sau-sap-nhap/
