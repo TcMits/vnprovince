@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -28,6 +30,17 @@ func EachDivision(fn func(d Division) bool) {
 	}
 }
 
+func AtIndex(idx int) (Division, bool){
+	if idx < 0 || idx >= len(divisions) {
+		return Division{}, false
+	}
+
+	return divisions[idx], true
+}
+
+func Len() int {
+	return len(divisions)
+}
 
 var divisions = [...]Division{
 `
@@ -142,11 +155,11 @@ func main() {
 
 	buf.WriteString("}\n")
 
-	if err := os.WriteFile("v2/vnprovince.go", must(format.Source(buf.Bytes())), os.ModePerm); err != nil {
+	if err := os.WriteFile("vnprovince.go", must(format.Source(buf.Bytes())), os.ModePerm); err != nil {
 		panic(err)
 	}
 
-	if err := os.WriteFile("v2/vnprovince_test.go", must(format.Source([]byte(prefixTestTmpl+"`"+data+"`"))), os.ModePerm); err != nil {
+	if err := os.WriteFile("vnprovince_test.go", must(format.Source([]byte(prefixTestTmpl+"`"+data+"`"))), os.ModePerm); err != nil {
 		panic(err)
 	}
 }

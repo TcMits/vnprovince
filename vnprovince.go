@@ -14,6 +14,18 @@ func EachDivision(fn func(d Division) bool) {
 	}
 }
 
+func AtIndex(idx int) (Division, bool) {
+	if idx < 0 || idx >= len(divisions) {
+		return Division{}, false
+	}
+
+	return divisions[idx], true
+}
+
+func Len() int {
+	return len(divisions)
+}
+
 var divisions = [...]Division{
 	{"Thành phố Hà Nội", "Quận Ba Đình", "Phường Phúc Xá"},
 	{"Thành phố Hà Nội", "Quận Ba Đình", "Phường Trúc Bạch"},

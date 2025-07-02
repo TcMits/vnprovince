@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -26,6 +28,18 @@ func EachDivision(fn func(d Division) bool) {
 			return
 		}
 	}
+}
+
+func AtIndex(idx int) (Division, bool){
+	if idx < 0 || idx >= len(divisions) {
+		return Division{}, false
+	}
+
+	return divisions[idx], true
+}
+
+func Len() int {
+	return len(divisions)
 }
 
 
