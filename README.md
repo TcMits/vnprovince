@@ -69,7 +69,7 @@ func main() {
 	}
 
 	if d.ProvinceName != "Thành phố Hồ Chí Minh" {
-		t.Fatalf("Expected province name 'Thành phố Hồ Chí Minh', got '%s'", d.ProvinceName)
+		log.Fatalf("Expected province name 'Thành phố Hồ Chí Minh', got '%s'", d.ProvinceName)
 	}
 
 	if d.OldDistrictName != "Quận 3" {
