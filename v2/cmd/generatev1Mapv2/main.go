@@ -4,24 +4,16 @@ package main
 
 import (
 	"bytes"
-	"embed"
-	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"go/format"
-	"io"
+	"net/http"
 	"os"
 	"strings"
-	"unicode"
 
 	v1 "github.com/TcMits/vnprovince"
 	v2 "github.com/TcMits/vnprovince/v2"
-	"golang.org/x/text/runes"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
 )
-
-//go:embed *.csv
-var fs embed.FS
 
 // based on https://vi.wikipedia.org/wiki/Danh_sách_đơn_vị_hành_chính_Việt_Nam_trong_đợt_cải_cách_thể_chế_2024–2025
 
@@ -30,11 +22,16 @@ package vnprovince
 
 
 func V1IndexToV2Index(idx int) (int, bool) {
-	result, ok := v1MapV2[idx]
-	return result, ok
+	if idx < 0 || idx >= len(v1MapV2) {
+		return 0, false
+	}
+
+
+	result := v1MapV2[idx]
+	return result, result != -1
 }
 
-var v1MapV2 = map[int]int{
+var v1MapV2 = [...]int{
 `
 
 func must[T any](v T, err error) T {
@@ -44,201 +41,196 @@ func must[T any](v T, err error) T {
 	return v
 }
 
-var fileMap = map[string]string{
-	"Tỉnh An Giang":         "an_giang.csv",
-	"Tỉnh Bắc Ninh":         "bac_ninh.csv",
-	"Tỉnh Cà Mau":           "ca_mau.csv",
-	"Thành phố Cần Thơ":     "can_tho.csv",
-	"Tỉnh Cao Bằng":         "cao_bang.csv",
-	"Thành phố Đà Nẵng":     "da_nang.csv",
-	"Tỉnh Đắk Lắk":          "dak_lak.csv",
-	"Tỉnh Điện Biên":        "dien_bien.csv",
-	"Tỉnh Đồng Nai":         "dong_nai.csv",
-	"Tỉnh Đồng Tháp":        "dong_thap.csv",
-	"Tỉnh Gia Lai":          "gia_lai.csv",
-	"Thành phố Hà Nội":      "ha_noi.csv",
-	"Tỉnh Hà Tĩnh":          "ha_tinh.csv",
-	"Thành phố Hải Phòng":   "hai_phong.csv",
-	"Thành phố Hồ Chí Minh": "ho_chi_minh.csv",
-	"Thành phố Huế":         "hue.csv",
-	"Tỉnh Hưng Yên":         "hung_yen.csv",
-	"Tỉnh Khánh Hòa":        "khanh_hoa.csv",
-	"Tỉnh Lai Châu":         "lai_chau.csv",
-	"Tỉnh Lâm Đồng":         "lam_dong.csv",
-	"Tỉnh Lạng Sơn":         "lang_son.csv",
-	"Tỉnh Lào Cai":          "lao_cai.csv",
-	"Tỉnh Nghệ An":          "nghe_an.csv",
-	"Tỉnh Ninh Bình":        "ninh_binh.csv",
-	"Tỉnh Phú Thọ":          "phu_tho.csv",
-	"Tỉnh Quảng Ngãi":       "quang_ngai.csv",
-	"Tỉnh Quảng Ninh":       "quang_ninh.csv",
-	"Tỉnh Quảng Trị":        "quang_tri.csv",
-	"Tỉnh Sơn La":           "son_la.csv",
-	"Tỉnh Tây Ninh":         "tay_ninh.csv",
-	"Tỉnh Thái Nguyên":      "thai_nguyen.csv",
-	"Tỉnh Thanh Hóa":        "thanh_hoa.csv",
-	"Tỉnh Tuyên Quang":      "tuyen_quang.csv",
-	"Tỉnh Vĩnh Long":        "vinh_long.csv",
-}
-
-var provinceMap = map[string]string{
-	"Tỉnh Quảng Nam":         "Thành phố Đà Nẵng",
-	"Tỉnh Bình Định":         "Tỉnh Gia Lai",
-	"Tỉnh Long An":           "Tỉnh Tây Ninh",
-	"Tỉnh Bắc Giang":         "Tỉnh Bắc Ninh",
-	"Tỉnh Hải Dương":         "Thành phố Hải Phòng",
-	"Tỉnh Yên Bái":           "Tỉnh Lào Cai",
-	"Tỉnh Hà Giang":          "Tỉnh Tuyên Quang",
-	"Tỉnh Bắc Kạn":           "Tỉnh Thái Nguyên",
-	"Tỉnh Vĩnh Phúc":         "Tỉnh Phú Thọ",
-	"Tỉnh Hoà Bình":          "Tỉnh Phú Thọ",
-	"Tỉnh Thái Bình":         "Tỉnh Hưng Yên",
-	"Tỉnh Hà Nam":            "Tỉnh Ninh Bình",
-	"Tỉnh Nam Định":          "Tỉnh Ninh Bình",
-	"Tỉnh Bến Tre":           "Tỉnh Vĩnh Long",
-	"Tỉnh Trà Vinh":          "Tỉnh Vĩnh Long",
-	"Tỉnh Bà Rịa - Vũng Tàu": "Thành phố Hồ Chí Minh",
-	"Tỉnh Bình Dương":        "Thành phố Hồ Chí Minh",
-	"Tỉnh Bình Phước":        "Tỉnh Đồng Nai",
-	"Tỉnh Hậu Giang":         "Thành phố Cần Thơ",
-	"Tỉnh Sóc Trăng":         "Thành phố Cần Thơ",
-	"Tỉnh Kiên Giang":        "Tỉnh An Giang",
-	"Tỉnh Tiền Giang":        "Tỉnh Đồng Tháp",
-	"Tỉnh Bạc Liêu":          "Tỉnh Cà Mau",
-	"Tỉnh Ninh Thuận":        "Tỉnh Khánh Hòa",
-	"Tỉnh Phú Yên":           "Tỉnh Đắk Lắk",
-	"Tỉnh Bình Thuận":        "Tỉnh Lâm Đồng",
-	"Tỉnh Đắk Nông":          "Tỉnh Lâm Đồng",
-	"Tỉnh Kon Tum":           "Tỉnh Quảng Ngãi",
-	"Tỉnh Quảng Bình":        "Tỉnh Quảng Trị",
-	"Tỉnh Thừa Thiên Huế":    "Thành phố Huế",
-}
-
 func main() {
-	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	buf := bytes.Buffer{}
 	buf.WriteString(prefixTmpl)
-	v1Idx := 0
-	v1.EachDivision(func(d v1.Division) bool {
-		newName := provinceMap[d.ProvinceName]
-		if newName == "" {
-			newName = d.ProvinceName
+
+	type provinceData struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	}
+
+	type districtData struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	}
+
+	type wardData struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	}
+
+	type convertData struct {
+		Status int `json:"status"`
+		Data   []struct {
+			ProvinceNameNew string `json:"ProvinceNameNew"`
+			WardNameNew     string `json:"wardNameNew"`
+		} `json:"data"`
+	}
+
+	provincesResp := must(http.Get("https://diachi.vnpost.vn/api/address/option/provinces?type=1"))
+	defer provincesResp.Body.Close()
+	provinces := make([]provinceData, 0)
+	if err := json.NewDecoder(provincesResp.Body).Decode(&provinces); err != nil {
+		panic(err)
+	}
+
+	for _, p := range provinces {
+		switch {
+		case strings.HasPrefix(p.Name, "TP. "):
+			p.Name = "Thành phố " + strings.TrimPrefix(p.Name, "TP. ")
+		case strings.HasPrefix(p.Name, "Tỉnh "):
+		default:
+			panic("province name does not start with TP. or Tỉnh: " + p.Name)
 		}
 
-		fileName := fileMap[newName]
-		if fileName == "" {
-			panic("file not found for " + newName)
-		}
+		func() {
+			districtsResp := must(http.Get("https://diachi.vnpost.vn/api/address/option/districts?type=1&provinceCode=" + p.Code))
+			defer districtsResp.Body.Close()
+			districts := make([]districtData, 0)
 
-		file := must(fs.Open(fileName))
-		defer file.Close()
-
-		newWardName := ""
-
-		r := csv.NewReader(file)
-		for {
-			row, err := r.Read()
-			if err == io.EOF {
-				break
+			if err := json.NewDecoder(districtsResp.Body).Decode(&districts); err != nil {
+				panic(err)
 			}
 
-			col0, _, err := transform.String(t, strings.TrimSpace(row[0]))
-			if err != nil {
-				panic(fmt.Sprintf("Error transforming string %s: %v", row[0], err))
+			for _, d := range districts {
+				switch {
+				case strings.HasPrefix(d.Name, "TP. "):
+					d.Name = "Thành phố " + strings.TrimPrefix(d.Name, "TP. ")
+				case strings.HasPrefix(d.Name, "TP."):
+					d.Name = "Thành phố " + strings.TrimPrefix(d.Name, "TP.")
+				case strings.HasPrefix(d.Name, "TX. "):
+					d.Name = "Thị xã " + strings.TrimPrefix(d.Name, "TX. ")
+				case strings.HasPrefix(d.Name, "TX "):
+					d.Name = "Thị xã " + strings.TrimPrefix(d.Name, "TX ")
+				case strings.HasPrefix(d.Name, "H. "):
+					d.Name = "Huyện " + strings.TrimPrefix(d.Name, "H. ")
+				case strings.HasPrefix(d.Name, "H "):
+					d.Name = "Huyện " + strings.TrimPrefix(d.Name, "H ")
+				case strings.HasPrefix(d.Name, "Q. "):
+					d.Name = "Quận " + strings.TrimPrefix(d.Name, "Q. ")
+				case strings.HasPrefix(d.Name, "Huyện "):
+				default:
+					panic("district name does not start with TP., TX., H., or Q.: " + d.Name)
+				}
+
+				func() {
+					wardsResp := must(http.Get("https://diachi.vnpost.vn/api/address/option/wards?type=1&districtCode=" + d.Code + "&provinceCode=" + p.Code))
+					defer wardsResp.Body.Close()
+					wards := make([]wardData, 0)
+
+					if err := json.NewDecoder(wardsResp.Body).Decode(&wards); err != nil {
+						panic(err)
+					}
+
+					mapwards := make(map[string]struct{})
+					for _, w := range wards {
+						switch {
+						case strings.HasPrefix(w.Name, "P. "):
+							w.Name = "Phường " + strings.TrimPrefix(w.Name, "P. ")
+						case strings.HasPrefix(w.Name, "X. "):
+							w.Name = "Xã " + strings.TrimPrefix(w.Name, "X. ")
+						case strings.HasPrefix(w.Name, "TT. "):
+							w.Name = "Thị trấn " + strings.TrimPrefix(w.Name, "TT. ")
+						case strings.HasPrefix(w.Name, "TT."):
+							w.Name = "Thị trấn " + strings.TrimPrefix(w.Name, "TT.")
+						case strings.HasPrefix(w.Name, "Đ. "):
+							w.Name = "Đảo " + strings.TrimPrefix(w.Name, "Đ. ")
+						case strings.HasPrefix(w.Name, "Đặc khu "):
+						case w.Name == "":
+							continue
+						case w.Name == "Ea Chà Rang":
+							w.Name = "Xã Ea Chà Rang"
+						default:
+							panic("ward name does not start with P. or X. or TT.: " + w.Name)
+						}
+
+						if _, ok := mapwards[w.Name]; ok {
+							continue
+						}
+
+						mapwards[w.Name] = struct{}{}
+						v1Idx := 0
+						foundv1 := false
+						v1.EachDivision(func(di v1.Division) bool {
+							if di.ProvinceName == p.Name && di.DistrictName == d.Name && di.WardName == w.Name {
+								foundv1 = true
+								return false
+							}
+
+							v1Idx++
+							return true
+						})
+
+						if !foundv1 {
+							panic("could not find division in v1: " + p.Name + ", " + d.Name + ", " + w.Name)
+						}
+
+						func() {
+							v2Idx := 0
+							defer func() {
+								buf.WriteString(fmt.Sprintf("\t%d,\n", v2Idx))
+							}()
+							reader := strings.NewReader(
+								fmt.Sprintf(`{"direction":1,"provinceCode":"` + p.Code + `","districtCode":"` + d.Code + `","wardCode":"` + w.Code + `","pageIndex":0,"pageSize":10,"provinceName":"","districtName":"","wardName":"","name":true,"bcCode":false,"bcqgCode":false,"inputText":"","territory":1,"captchaCode":"2165"}`),
+							)
+
+							newWardResp := must(http.Post("https://diachi.vnpost.vn/api/address/convert", "application/json", reader))
+							defer newWardResp.Body.Close()
+
+							newWard := convertData{}
+							if err := json.NewDecoder(newWardResp.Body).Decode(&newWard); err != nil {
+								panic(err)
+							}
+
+							if newWard.Status != 200 || len(newWard.Data) == 0 {
+								fmt.Println("can't not convert ward name for", p.Name, d.Name, w.Name, "status:", newWard.Status)
+								v2Idx = -1
+								return
+							}
+
+							switch {
+							case strings.HasPrefix(newWard.Data[0].WardNameNew, "P. "):
+								newWard.Data[0].WardNameNew = "Phường " + strings.TrimPrefix(newWard.Data[0].WardNameNew, "P. ")
+							case strings.HasPrefix(newWard.Data[0].WardNameNew, "X. "):
+								newWard.Data[0].WardNameNew = "Xã " + strings.TrimPrefix(newWard.Data[0].WardNameNew, "X. ")
+							case strings.HasPrefix(newWard.Data[0].WardNameNew, "TT. "):
+								newWard.Data[0].WardNameNew = "Thị trấn " + strings.TrimPrefix(newWard.Data[0].WardNameNew, "TT. ")
+							case strings.HasPrefix(newWard.Data[0].WardNameNew, "Đặc khu "):
+							default:
+								panic("ward name does not start with P. or X. or TT.: " + newWard.Data[0].WardNameNew)
+							}
+
+							switch {
+							case strings.HasPrefix(newWard.Data[0].ProvinceNameNew, "TP. "):
+								newWard.Data[0].ProvinceNameNew = "Thành phố " + strings.TrimPrefix(newWard.Data[0].ProvinceNameNew, "TP. ")
+							case strings.HasPrefix(newWard.Data[0].ProvinceNameNew, "Tỉnh "):
+							default:
+								panic("province name does not start with TP. or Tỉnh: " + newWard.Data[0].ProvinceNameNew)
+							}
+
+							findedv2 := false
+							v2.EachDivision(func(di v2.Division) bool {
+								if di.ProvinceName == newWard.Data[0].ProvinceNameNew && di.WardName == newWard.Data[0].WardNameNew {
+									findedv2 = true
+									return false
+								}
+
+								v2Idx++
+								return true
+							})
+
+							if !findedv2 {
+								println("could not find division in v2: " + newWard.Data[0].ProvinceNameNew + ", " + newWard.Data[0].WardNameNew)
+								v2Idx = -1
+							}
+						}()
+					}
+				}()
 			}
+		}()
+	}
 
-			col1, _, err := transform.String(t, strings.TrimSpace(row[1]))
-			if err != nil {
-				panic(fmt.Sprintf("Error transforming string %s: %v", row[1], err))
-			}
-
-			col2, _, err := transform.String(t, strings.TrimSpace(row[2]))
-			if err != nil {
-				panic(fmt.Sprintf("Error transforming string %s: %v", row[2], err))
-			}
-
-			dn, _, err := transform.String(t, d.DistrictName)
-			if err != nil {
-				panic(fmt.Sprintf("Error transforming string %s: %v", d.DistrictName, err))
-			}
-
-			wn, _, err := transform.String(t, d.WardName)
-			if err != nil {
-				panic(fmt.Sprintf("Error transforming string %s: %v", d.WardName, err))
-			}
-
-			if col2 == "" {
-				continue
-			}
-
-			if col2 == wn {
-				newWardName = col2
-				break
-			}
-
-			if !strings.Contains(strings.ToUpper(col0), strings.ToUpper(dn)) && col0 != "" {
-				continue
-			}
-
-			compareWardName := strings.TrimPrefix(d.WardName, "Xã ")
-			compareWardName = strings.TrimPrefix(compareWardName, "Thị trấn ")
-			compareWardName = strings.TrimPrefix(compareWardName, "Phường ")
-			wn, _, err = transform.String(t, compareWardName)
-			if err != nil {
-				panic(fmt.Sprintf("Error transforming string %s: %v", d.WardName, err))
-			}
-
-			if !strings.Contains(strings.ToUpper(col1), strings.ToUpper(wn)) {
-				continue
-			}
-
-			newWardName = col2
-			break
-		}
-
-		if newWardName == "" {
-			fmt.Printf("No new ward name found for %s, %s, %s\n", d.ProvinceName, d.DistrictName, d.WardName)
-			v1Idx++
-			return true
-		}
-
-		pn, _, err := transform.String(t, newName)
-		if err != nil {
-			panic(fmt.Sprintf("Error transforming string %s: %v", newName, err))
-		}
-
-		v2Idx := 0
-		finded := false
-		v2.EachDivision(func(d2 v2.Division) bool {
-			compareProvinceName, _, err := transform.String(t, d2.ProvinceName)
-			if err != nil {
-				panic(fmt.Sprintf("Error transforming string %s: %v", d2.ProvinceName, err))
-			}
-
-			compareWardName, _, err := transform.String(t, d2.WardName)
-			if err != nil {
-				panic(fmt.Sprintf("Error transforming string %s: %v", d2.WardName, err))
-			}
-
-			if compareProvinceName == pn && compareWardName == newWardName {
-				finded = true
-				return false
-			}
-
-			v2Idx++
-			return true
-		})
-
-		if !finded {
-			fmt.Printf("No v2 division found for %s, %s\n", newName, newWardName)
-			v1Idx++
-			return true
-		}
-
-		buf.WriteString(fmt.Sprintf("\t%d: %d,\n", v1Idx, v2Idx))
-		v1Idx++
-		return true
-	})
 	buf.WriteString("}\n")
 
 	if err := os.WriteFile("v1_map.go", must(format.Source(buf.Bytes())), os.ModePerm); err != nil {

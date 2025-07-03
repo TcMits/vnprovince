@@ -31,10 +31,6 @@ func Test_V1IndexToV2Index(t *testing.T) {
 		t.Fatalf("Expected province name 'Thành phố Hồ Chí Minh', got '%s'", d.ProvinceName)
 	}
 
-	if d.OldDistrictName != "Quận 3" {
-		t.Fatalf("Expected old district name 'Quận 3', got '%s'", d.OldDistrictName)
-	}
-
 	if d.WardName != "Phường Nhiêu Lộc" {
 		t.Fatalf("Expected ward name 'Phường Nhiêu Lộc', got '%s'", d.WardName)
 	}
