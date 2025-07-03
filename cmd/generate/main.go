@@ -5,13 +5,12 @@ package main
 import (
 	"bytes"
 	_ "embed"
+	"encoding/json"
 	"go/format"
+	"net/http"
 	"os"
-	"unsafe"
+	"strings"
 )
-
-//go:embed divisions_16_10_2024.csv
-var data string
 
 const prefixTmpl = `
 package vnprovince
@@ -42,60 +41,8 @@ func Len() int {
 	return len(divisions)
 }
 
-
 var divisions = [...]Division{
 `
-
-const prefixTestTmpl = `
-package vnprovince
-
-import (
-	"strings"
-	"testing"
-	"unsafe"
-)
-
-func stob(s string) []byte {
-	return unsafe.Slice(unsafe.StringData(s), len(s))
-}
-
-func TestEachDivision(t *testing.T) {
-	divisions := []Division{}
-	EachDivision(func(d Division) bool {
-		divisions = append(divisions, d)
-		return true
-	})
-
-	lineIdx := 0
-	startIdx := 0
-	for i := range stob(data) {
-		switch data[i] {
-		case '\n':
-			row := data[startIdx:i]
-			div := divisions[lineIdx]
-			if !strings.Contains(row, div.ProvinceName) || !strings.Contains(row, div.DistrictName) || !strings.Contains(row, div.WardName) {
-				t.Fatalf("line %d: expected %+v, got %q", lineIdx+1, divisions[lineIdx], row)
-			}
-
-			startIdx = i + 1
-			lineIdx++
-		}
-	}
-
-	if lineIdx != len(divisions) {
-		t.Fatalf("expected %d lines, got %d", lineIdx, len(divisions))
-	}
-
-	if startIdx != len(data) {
-		t.Fatalf("expected end of data at %d, got %d", len(data), startIdx)
-	}
-}
-
-const data = `
-
-func stob(s string) []byte {
-	return unsafe.Slice(unsafe.StringData(s), len(s))
-}
 
 func must[T any](v T, err error) T {
 	if err != nil {
@@ -104,63 +51,121 @@ func must[T any](v T, err error) T {
 	return v
 }
 
-type Division struct {
-	ProvinceName string `json:"provinceName"`
-	DistrictName string `json:"districtName"`
-	WardName     string `json:"wardName"`
-}
-
-func eachDivision(fn func(d Division) bool) {
-	if fn == nil {
-		return
-	}
-
-	commaSep := [7]int{}
-	startIdx := 0
-	for i := range stob(data) {
-		switch data[i] {
-		case '\n':
-			row := data[startIdx:i]
-			commaIdx := 0
-			for j, c := range stob(row) {
-				if c == ',' {
-					commaSep[commaIdx] = j
-					commaIdx++
-				}
-			}
-
-			if !fn(Division{
-				ProvinceName: row[:commaSep[0]],
-				DistrictName: row[commaSep[1]+1 : commaSep[2]],
-				WardName:     row[commaSep[3]+1 : commaSep[4]],
-			}) {
-				return
-			}
-
-			startIdx = i + 1 // skip newline character
-		}
-	}
-}
-
 func main() {
 	buf := bytes.Buffer{}
 	buf.WriteString(prefixTmpl)
-	eachDivision(func(d Division) bool {
-		buf.WriteString("\t{")
-		buf.WriteString(`"` + d.ProvinceName + `",`)
-		buf.WriteString(`"` + d.DistrictName + `",`)
-		buf.WriteString(`"` + d.WardName + `"},`)
-		buf.WriteByte('\n')
-		return true
-	})
+
+	type provinceData struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	}
+
+	type districtData struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	}
+
+	type wardData struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	}
+
+	provincesResp := must(http.Get("https://diachi.vnpost.vn/api/address/option/provinces?type=1"))
+	defer provincesResp.Body.Close()
+	provinces := make([]provinceData, 0)
+	if err := json.NewDecoder(provincesResp.Body).Decode(&provinces); err != nil {
+		panic(err)
+	}
+
+	for _, p := range provinces {
+		switch {
+		case strings.HasPrefix(p.Name, "TP. "):
+			p.Name = "Thành phố " + strings.TrimPrefix(p.Name, "TP. ")
+		case strings.HasPrefix(p.Name, "Tỉnh "):
+		default:
+			panic("province name does not start with TP. or Tỉnh: " + p.Name)
+		}
+
+		func() {
+			districtsResp := must(http.Get("https://diachi.vnpost.vn/api/address/option/districts?type=1&provinceCode=" + p.Code))
+			defer districtsResp.Body.Close()
+			districts := make([]districtData, 0)
+
+			if err := json.NewDecoder(districtsResp.Body).Decode(&districts); err != nil {
+				panic(err)
+			}
+
+			for _, d := range districts {
+				switch {
+				case strings.HasPrefix(d.Name, "TP. "):
+					d.Name = "Thành phố " + strings.TrimPrefix(d.Name, "TP. ")
+				case strings.HasPrefix(d.Name, "TP."):
+					d.Name = "Thành phố " + strings.TrimPrefix(d.Name, "TP.")
+				case strings.HasPrefix(d.Name, "TX. "):
+					d.Name = "Thị xã " + strings.TrimPrefix(d.Name, "TX. ")
+				case strings.HasPrefix(d.Name, "TX "):
+					d.Name = "Thị xã " + strings.TrimPrefix(d.Name, "TX ")
+				case strings.HasPrefix(d.Name, "H. "):
+					d.Name = "Huyện " + strings.TrimPrefix(d.Name, "H. ")
+				case strings.HasPrefix(d.Name, "H "):
+					d.Name = "Huyện " + strings.TrimPrefix(d.Name, "H ")
+				case strings.HasPrefix(d.Name, "Q. "):
+					d.Name = "Quận " + strings.TrimPrefix(d.Name, "Q. ")
+				case strings.HasPrefix(d.Name, "Huyện "):
+				default:
+					panic("district name does not start with TP., TX., H., or Q.: " + d.Name)
+				}
+
+				func() {
+					wardsResp := must(http.Get("https://diachi.vnpost.vn/api/address/option/wards?type=1&districtCode=" + d.Code + "&provinceCode=" + p.Code))
+					defer wardsResp.Body.Close()
+					wards := make([]wardData, 0)
+
+					if err := json.NewDecoder(wardsResp.Body).Decode(&wards); err != nil {
+						panic(err)
+					}
+
+					mapwards := make(map[string]struct{})
+					for _, w := range wards {
+						switch {
+						case strings.HasPrefix(w.Name, "P. "):
+							w.Name = "Phường " + strings.TrimPrefix(w.Name, "P. ")
+						case strings.HasPrefix(w.Name, "X. "):
+							w.Name = "Xã " + strings.TrimPrefix(w.Name, "X. ")
+						case strings.HasPrefix(w.Name, "TT. "):
+							w.Name = "Thị trấn " + strings.TrimPrefix(w.Name, "TT. ")
+						case strings.HasPrefix(w.Name, "TT."):
+							w.Name = "Thị trấn " + strings.TrimPrefix(w.Name, "TT.")
+						case strings.HasPrefix(w.Name, "Đ. "):
+							w.Name = "Đảo " + strings.TrimPrefix(w.Name, "Đ. ")
+						case strings.HasPrefix(w.Name, "Đặc khu "):
+						case w.Name == "":
+							continue
+						case w.Name == "Ea Chà Rang":
+							w.Name = "Xã Ea Chà Rang"
+						default:
+							panic("ward name does not start with P. or X. or TT.: " + w.Name)
+						}
+
+						if _, ok := mapwards[w.Name]; ok {
+							continue
+						}
+
+						buf.WriteString("\t{")
+						buf.WriteString(`"` + p.Name + `",`)
+						buf.WriteString(`"` + d.Name + `",`)
+						buf.WriteString(`"` + w.Name + `"},`)
+						buf.WriteByte('\n')
+						mapwards[w.Name] = struct{}{}
+					}
+				}()
+			}
+		}()
+	}
 
 	buf.WriteString("}\n")
 
 	if err := os.WriteFile("vnprovince.go", must(format.Source(buf.Bytes())), os.ModePerm); err != nil {
-		panic(err)
-	}
-
-	if err := os.WriteFile("vnprovince_test.go", must(format.Source([]byte(prefixTestTmpl+"`"+data+"`"))), os.ModePerm); err != nil {
 		panic(err)
 	}
 }

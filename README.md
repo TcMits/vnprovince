@@ -72,10 +72,6 @@ func main() {
 		log.Fatalf("Expected province name 'Thành phố Hồ Chí Minh', got '%s'", d.ProvinceName)
 	}
 
-	if d.OldDistrictName != "Quận 3" {
-		log.Fatalf("Expected old district name 'Quận 3', got '%s'", d.OldDistrictName)
-	}
-
 	if d.WardName != "Phường Nhiêu Lộc" {
 		log.Fatalf("Expected ward name 'Phường Nhiêu Lộc', got '%s'", d.WardName)
 	}
@@ -88,3 +84,4 @@ func main() {
 - https://danhmuchanhchinh.gso.gov.vn/
 - https://easyinvoice.vn/easyinvoice-cap-nhat-danh-sach-xa-phuong-moi-2025-sau-sap-nhap/
 - https://vi.wikipedia.org/wiki/Danh_sách_đơn_vị_hành_chính_Việt_Nam_trong_đợt_cải_cách_thể_chế_2024–2025
+- https://diachi.vnpost.vn
