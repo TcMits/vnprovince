@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dotenv-linter/action-dotenv-linter@v2
+      - uses: dotenv-linter/action-dotenv-linter@v3
         with:
           reporter: github-pr-review
 
